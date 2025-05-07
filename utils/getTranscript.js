@@ -1,19 +1,19 @@
 // utils/getTranscript.js
 const { YouTubeTranscript } = require("youtube-transcript");
-const { fallbackWhisper } = require("./fallbackWhisper");
 
+/**
+ * Try to fetch captions from YouTube.
+ * On any error (410, network, etc.), return null.
+ */
 async function getTranscriptFromYouTube(youtubeUrl) {
   try {
     console.log("📄 Trying YouTube captions…");
-    const raw = await YouTubeTranscript.fetchTranscript(youtubeUrl);
-    const text = raw.map(p => p.text).join(" ");
-    console.log("✅ Captions found");
+    const transcript = await YouTubeTranscript.fetchTranscript(youtubeUrl);
+    const text = transcript.map((p) => p.text).join(" ");
+    console.log("✅ Captions fetched");
     return text;
   } catch (err) {
-    console.warn("🔁 No captions, falling back to Whisper API…");
-    const t = await fallbackWhisper(youtubeUrl);
-    if (t) return t;
-    console.error("❌ Whisper API also failed");
+    console.warn("⚠️ YouTube captions failed:", err.message || err);
     return null;
   }
 }
