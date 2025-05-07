@@ -1,10 +1,10 @@
 const dotenv = require("dotenv");
 dotenv.config();
 
-import OpenAI from "openai";
+const OpenAI = require("openai");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export async function summarizeTranscript(text) {
+async function summarizeTranscript(text) {
   const prompt = `
 You are an expert summarizer. Summarize the following YouTube transcript with:
 1. Key Points
@@ -22,3 +22,5 @@ ${text}
 
   return completion.choices[0].message.content;
 }
+
+module.exports = { summarizeTranscript };
