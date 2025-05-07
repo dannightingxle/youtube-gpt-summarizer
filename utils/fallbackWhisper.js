@@ -45,4 +45,5 @@ async function fallbackWhisper(youtubeUrl) {
   return resp.data.text;
 }
 
-module.exports = { fallbackWhisper };
+// export under the name your route expects
+module.exports = { transcribeWithWhisper: fallbackWhisper };
