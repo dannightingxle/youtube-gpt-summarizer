@@ -1,7 +1,7 @@
-# Base image with more tools preinstalled
+# Use Node.js with Debian base to support apt
 FROM node:18-bullseye
 
-# Install Python and FFmpeg
+# Install Python and FFmpeg before running npm install
 RUN apt-get update && apt-get install -y \
   python3 \
   python3-pip \
@@ -12,15 +12,15 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy and install dependencies
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy the full project
+# Copy the full app code
 COPY . .
 
-# Expose port
+# Expose the port
 EXPOSE 3000
 
-# Start the server
+# Start the app
 CMD ["node", "server.js"]
