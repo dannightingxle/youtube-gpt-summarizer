@@ -1,0 +1,12 @@
+{
+  "name": "youtube-gpt-summarizer",
+  "dependencies": {
+    "openai": "^4.0.0",
+    "@supabase/supabase-js": "^2.39.5",
+    "dotenv": "^16.3.1",
+    "youtube-transcript": "^1.0.6",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  }
+}
