@@ -8,13 +8,11 @@ require("dotenv").config();
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 
-async function fallbackWhisper(youtubeUrl) {
+async function transcribeWithWhisper(youtubeUrl) {
   console.log("🔁 Whisper fallback via API…");
 
-  // 1. Create a temp file for the audio
+  // 1) Download audio-only stream to a temp file
   const tmpFile = tmp.tmpNameSync({ postfix: ".webm" });
-
-  // 2. Download audio-only stream to that file
   await new Promise((resolve, reject) => {
     const stream = ytdl(youtubeUrl, { filter: "audioonly", quality: "highestaudio" });
     const ws = fs.createWriteStream(tmpFile);
@@ -24,7 +22,7 @@ async function fallbackWhisper(youtubeUrl) {
   });
   console.log("✅ Audio downloaded:", tmpFile);
 
-  // 3. Send to OpenAI Whisper API
+  // 2) Send to OpenAI Whisper API
   const form = new FormData();
   form.append("model", "whisper-1");
   form.append("file", fs.createReadStream(tmpFile));
@@ -32,18 +30,18 @@ async function fallbackWhisper(youtubeUrl) {
   const resp = await axios.post(
     "https://api.openai.com/v1/audio/transcriptions",
     form,
-    { headers: { 
+    {
+      headers: {
         Authorization: `Bearer ${OPENAI_KEY}`,
-        ...form.getHeaders()
-      }
+        ...form.getHeaders(),
+      },
     }
   );
 
-  // 4. Clean up and return text
+  // 3) Cleanup and return transcript text
   fs.unlinkSync(tmpFile);
   console.log("✅ Whisper transcript received");
   return resp.data.text;
 }
 
-// export under the name your route expects
-module.exports = { transcribeWithWhisper: fallbackWhisper };
+module.exports = { transcribeWithWhisper };
