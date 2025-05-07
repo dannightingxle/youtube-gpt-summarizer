@@ -3,11 +3,11 @@ FROM node:18
 
 WORKDIR /app
 
-# Copy package files, install only JS deps
+# Install your JS dependencies only
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of your code
+# Copy code
 COPY . .
 
 EXPOSE 3000
