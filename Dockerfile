@@ -1,20 +1,26 @@
-# Dockerfile
+# Use Node.js base image
+FROM node:18-slim
 
-FROM node:18
+# Install Python and FFmpeg
+RUN apt-get update && apt-get install -y \
+  python3 \
+  python3-pip \
+  ffmpeg \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install Python and ffmpeg
-RUN apt-get update && apt-get install -y python3 ffmpeg
-
+# Create app directory
 WORKDIR /app
 
-# Install app dependencies
+# Copy and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the app
+# Copy app source
 COPY . .
 
-# Set environment variable at runtime via Render, not here
+# Expose the port (optional but useful)
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# Start the app
+CMD [ "node", "server.js" ]
