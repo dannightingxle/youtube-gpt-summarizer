@@ -11,37 +11,49 @@ const OPENAI_KEY = process.env.OPENAI_API_KEY;
 async function transcribeWithWhisper(youtubeUrl) {
   console.log("🔁 Whisper fallback via API…");
 
-  // 1) Download audio-only stream to a temp file
-  const tmpFile = tmp.tmpNameSync({ postfix: ".webm" });
-  await new Promise((resolve, reject) => {
-    const stream = ytdl(youtubeUrl, { filter: "audioonly", quality: "highestaudio" });
-    const ws = fs.createWriteStream(tmpFile);
-    stream.pipe(ws);
-    ws.on("finish", resolve);
-    ws.on("error", reject);
-  });
-  console.log("✅ Audio downloaded:", tmpFile);
+  try {
+    // 1) Download audio-only stream to a temp file
+    const tmpFile = tmp.tmpNameSync({ postfix: ".webm" });
+    await new Promise((resolve, reject) => {
+      const stream = ytdl(youtubeUrl, {
+        filter: "audioonly",
+        quality: "highestaudio",
+      });
+      const ws = fs.createWriteStream(tmpFile);
+      stream.pipe(ws);
 
-  // 2) Send to OpenAI Whisper API
-  const form = new FormData();
-  form.append("model", "whisper-1");
-  form.append("file", fs.createReadStream(tmpFile));
+      // resolve when written, reject on either stream error
+      ws.on("finish", resolve);
+      ws.on("error", reject);
+      stream.on("error", reject);
+    });
+    console.log("✅ Audio downloaded");
 
-  const resp = await axios.post(
-    "https://api.openai.com/v1/audio/transcriptions",
-    form,
-    {
-      headers: {
-        Authorization: `Bearer ${OPENAI_KEY}`,
-        ...form.getHeaders(),
-      },
-    }
-  );
+    // 2) Send to OpenAI Whisper API
+    const form = new FormData();
+    form.append("model", "whisper-1");
+    form.append("file", fs.createReadStream(tmpFile));
 
-  // 3) Cleanup and return transcript text
-  fs.unlinkSync(tmpFile);
-  console.log("✅ Whisper transcript received");
-  return resp.data.text;
+    const resp = await axios.post(
+      "https://api.openai.com/v1/audio/transcriptions",
+      form,
+      {
+        headers: {
+          Authorization: `Bearer ${OPENAI_KEY}`,
+          ...form.getHeaders(),
+        },
+      }
+    );
+
+    // 3) Cleanup and return transcript
+    fs.unlinkSync(tmpFile);
+    console.log("✅ Whisper transcript received");
+    return resp.data.text;
+
+  } catch (err) {
+    console.error("❌ Whisper fallback error:", err.message || err);
+    return null; // let your route handle null
+  }
 }
 
 module.exports = { transcribeWithWhisper };
