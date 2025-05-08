@@ -1,9 +1,8 @@
-# Dockerfile
 FROM node:18
 
 WORKDIR /app
 
-# Install your JS dependencies only
+# Install only JS deps (no native ffmpeg/python)
 COPY package*.json ./
 RUN npm install
 

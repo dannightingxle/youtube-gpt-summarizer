@@ -13,12 +13,11 @@ app.use(bodyParser.json());
 app.post("/summarize", async (req, res) => {
   try {
     const { email, youtubeUrl } = req.body;
-
     if (!email || !youtubeUrl) {
       return res.status(400).json({ error: "Missing email or YouTube URL" });
     }
 
-    // ——— Supabase usage tracking ———
+    // Supabase usage tracking
     let { data: user } = await supabase
       .from("users")
       .select("*")
@@ -26,7 +25,6 @@ app.post("/summarize", async (req, res) => {
       .single();
 
     const today = new Date().toISOString().split("T")[0];
-
     if (!user) {
       const { data: newUser } = await supabase
         .from("users")
@@ -56,34 +54,24 @@ app.post("/summarize", async (req, res) => {
         .eq("email", email);
     }
 
-    // ——— Transcript fetch (with Whisper fallback) ———
+    // Always fallback to Whisper API
     let transcript = await getTranscriptFromYouTube(youtubeUrl);
+    console.log("📄 Transcript from captions:", transcript);
 
-    console.log("📄 Transcript from captions:", transcript?.slice(0, 100));
-
-    if (
-      !transcript ||
-      transcript.trim().length < 20 ||
-      transcript.toLowerCase().includes("youtube is currently blocking")
-    ) {
-      console.log("🔁 No captions found, trying Whisper fallback...");
-      try {
-        transcript = await transcribeWithWhisper(youtubeUrl);
-      } catch (whErr) {
-        console.error("❌ Whisper failed:", whErr.message || whErr);
+    // Use Whisper if no caption text
+    if (!transcript) {
+      console.log("🔁 No captions, using Whisper fallback...");
+      transcript = await transcribeWithWhisper(youtubeUrl);
+      if (!transcript) {
         return res.status(400).json({ error: "Transcript not available." });
       }
     }
 
-    // ——— Summarize and respond ———
     const summary = await summarizeTranscript(transcript);
     return res.json({ summary });
-
   } catch (err) {
     console.error("❌ /summarize crashed:", err);
-    return res
-      .status(500)
-      .json({ error: "Internal server error", detail: err.message });
+    return res.status(500).json({ error: "Internal server error", detail: err.message });
   }
 });
 

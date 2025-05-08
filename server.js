@@ -1,6 +1,4 @@
-require("dotenv").config();
 const summarizeApp = require("./functions/summarize");
+const PORT = process.env.PORT || 3000;
 
-summarizeApp.listen(3000, () => {
-  console.log("Listening on port 3000");
-});
+summarizeApp.listen(PORT, () => console.log(`🚀 Listening on port ${PORT}`));
